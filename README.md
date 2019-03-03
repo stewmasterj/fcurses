@@ -12,6 +12,10 @@ With these routines it would be possible to write a program that could interact
  with the plot routine for user interactive plotting.
 Forms could be designed for data entry.
 
+## Warnings
+Music and sound require write access to /dev/tty1, or you can change what terminal it writes beeps to.  
+If the keyboard doesn't work on your system when running the examples, it may use different scan codes for the keys, try using the grabkeys.f90 program to see.
+
 ## Example Files:  
 -ANSIseq    A program that exemplifies ANSI escape sequences for terminal control  
 -test       Shows the use of character and string placement to screens  
