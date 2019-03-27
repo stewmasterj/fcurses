@@ -32,7 +32,14 @@ module fcurses
 !      This allows for escape sequences in the string for colour etc.
 !
 ! getkey( key )
-!      returns the value of a key press in a 5 character array: key
+! OLD     returns the value of a key press in a 5 character array: key
+!
+! getfullkey( key, n )
+!      returns the value of a key press
+!      optional, n, provides byte length of scan code
+!
+! getrawline( line, term )
+!	captures a string from keyboard when in raw mode, terminated by byte 'term'
 !
 ! sattr( str, val )
 !      set the attributes of the string to val= font, colour etc.
@@ -228,19 +235,53 @@ enddo
 
 end subroutine getkey !}}}
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!80
-! getfullkey( key )
+! getfullkey( key, n )
 !      returns the value of a key press
-subroutine getfullkey(c) !{{{
+!      optional, n, provides byte length of scan code
+subroutine getfullkey(c,n) !{{{
 integer :: i, err
+integer, optional, intent(out) :: n
 character, dimension(7), intent(out) :: c
 
-c=" "
+c=char(0)
 do i=1,7
    call fgetc(5,c(i),err)
-   if (kbhit().eq.0) return !check if the buffer is empty yet
+   if (kbhit().eq.0) then
+     if (present(n)) n = i
+     return !check if the buffer is empty yet
+   endif
 enddo
 
 end subroutine getfullkey !}}}
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!80
+! getrawline( line, term, echo )
+!	captures a string from keyboard when in raw mode, terminated by byte 'term'
+subroutine getrawline( line, term, echo ) !{{{
+implicit none
+character(*) :: line
+character :: term
+logical :: echo
+character, dimension(7) :: c
+integer :: n, i, l, j
+
+l=len(line) !how big is this string?
+line = ""
+i = 0
+do 
+  call getfullkey(c,n)
+  if (c(1).eq.term) return
+  if (echo) write(6,'(A)',advance="no") c(1:n)
+  if (i.gt.l) then
+    write(0,*) "getrawline: buffer overflow"
+    return
+  endif
+  do j = 1, n
+    line(i+j:i+j) = c(j)
+  enddo
+  i = i + n
+enddo
+
+end subroutine getrawline !}}}
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!80
 ! sattr( str, val )
 !      set the attributes of the string to val= font, colour etc.
