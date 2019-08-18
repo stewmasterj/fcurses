@@ -23,7 +23,8 @@ do
    if (c(1).eq."q") exit
    if (c(1).eq.":") then
      write(6,'(A)',advance="no") ":"
-     call getrawline( line, achar(13), .true. ) !echo the keys
+     !call getrawline( line, achar(13), .true. ) !echo the keys
+     call fancygetrawline( line, achar(13), .true. ) !echo the keys
      write(6,'(A)') achar(13)
      call interpretLine( line )
      cycle

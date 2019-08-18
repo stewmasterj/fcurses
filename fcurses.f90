@@ -140,9 +140,12 @@ end subroutine init_screen  !}}}
 !      returns terminal to cooked mode, use same tempDir
 subroutine kill_screen( tmp ) !{{{
 character(*) :: tmp
+integer :: e
 ! set cursor to bottom left and put terminal into cooked mode
 write(6,'(a2,i3.3,a3)') char(27)//'[',lines,';0H'
-call system("stty `cat "//trim(tmp)//"/screen`")
+!call system("stty `cat "//trim(tmp)//"/screen`")
+call execute_command_line("stty `cat "//trim(tmp)//"/screen`", wait=.true., exitstat=e)
+if (e.eq.0) return
 end subroutine  !}}}
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!80
 ! cls
@@ -282,6 +285,56 @@ do
 enddo
 
 end subroutine getrawline !}}}
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!80
+! fancygetrawline( line, term, echo )
+!	captures a string from keyboard when in raw mode, terminated by byte 'term'
+!       can use backspace key. Arrows and tab completion in future?
+subroutine fancygetrawline( line, term, echo ) !{{{
+implicit none
+character(*) :: line
+character :: term, BS
+logical :: echo
+character, dimension(7) :: c
+character(len=7) :: DEL, LEFT, RIGHT
+integer :: n, i, l, j, p
+
+DEL=char(0); LEFT=char(0); RIGHT=char(0)
+BS        = achar(127) !normal delete code is usually mapped to backspace per VT220
+DEL(1:4)  = achar(27)//"[3~"    !delete key is weird per VT220
+LEFT(1:3) = achar(27)//"[D"
+RIGHT(1:3)= achar(27)//"[C"
+l=len(line) !how big is this string?
+line = ""
+i = 0; p = 1
+do 
+  call getfullkey(c,n)
+  if (c(1).eq.term) return
+  if (i.gt.l) then
+    write(0,*) "getrawline: buffer overflow"; return
+  endif
+  !forall (i=1:n) cs(i:i)=c(i)
+  if (c(1).eq.BS) then
+  !if (c(1).eq.BS(1:1)) then
+    line(i:i) = ""
+    i = i - 1; p = p - 1
+    write(6,'(A)',advance="no") LEFT(1:3)//" "//LEFT(1:3)
+    cycle
+  !elseif (cs.eq.DEL) then
+  !  line(p:l-1) = line(p+1:l)
+  !  i = i - 1; cycle
+  !elseif (cs.eq.LEFT) then
+  !  p = p - 1; cycle
+  !elseif (cs.eq.RIGHT) then
+  !  p = p + 1; cycle
+  endif
+  if (echo) write(6,'(A)',advance="no") c(1:n)
+  do j = 1, n
+    line(i+j:i+j) = c(j)
+  enddo
+  i = i + n;  p = p + n
+enddo
+
+end subroutine fancygetrawline !}}}
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!80
 ! sattr( str, val )
 !      set the attributes of the string to val= font, colour etc.
@@ -453,7 +506,7 @@ end subroutine tline !}}}
 !      Draw a line from point with radius and angle to the terminal directly
 subroutine tlinepolar(x,y,r,theta) !{{{
 implicit none
-integer(kind=4) :: i,x,y,theta,r
+integer(kind=4) :: x,y,theta,r
 real(kind=4) :: deg
  deg=theta/57.2957795130823
  !write(6,*) nint(r*cos(deg)), x,y, r, deg

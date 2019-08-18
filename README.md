@@ -16,6 +16,10 @@ Forms could be designed for data entry.
 Music and sound require write access to /dev/tty1, or you can change what terminal it writes beeps to.  
 If the keyboard doesn't work on your system when running the examples, it may use different scan codes for the keys, try using the grabkeys.f90 program to see.
 
+## Requirements
+This does make some initial external system calls using 'stty'.
+Tested with gfortran a part of gcc version 6.3.0
+
 ## Example Files:  
 -ANSIseq    A program that exemplifies ANSI escape sequences for terminal control  
 -test       Shows the use of character and string placement to screens  
@@ -37,6 +41,7 @@ If the keyboard doesn't work on your system when running the examples, it may us
 -play1      passive space invaders that you can use as target practice, plus sound!  
 -play2      active space invaders that you must shoot down!  
 -grabkeys   displays the Decimal and Hex values of the 7-Bytes in a keyboard scancode.  
+-inputModes same as 'grabkeys' but includes a "command mode" when ":" is pressed.  
 
 ## Routines
 
@@ -66,6 +71,9 @@ write a string to position (col, line) of the terminal. This allows for escape s
 
 -`getfullkey( key )`  
 returns the value of a key press
+
+-`getrawline( line, term, echo )`  
+captures a string from keyboard when in raw mode, terminated by byte 'term'
 
 -`sattr( str, val )`  
 set the attributes of the string to val= font, colour etc.
