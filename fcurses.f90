@@ -316,7 +316,7 @@ do
   if (c(1).eq.BS) then
   !if (c(1).eq.BS(1:1)) then
     line(i:i) = ""
-    i = i - 1; p = p - 1
+    i = max(0,i - 1); p = max(1,p - 1)
     write(6,'(A)',advance="no") LEFT(1:3)//" "//LEFT(1:3)
     cycle
   !elseif (cs.eq.DEL) then
